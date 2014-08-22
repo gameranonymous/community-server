@@ -13,8 +13,11 @@ if __name__ == "__main__":
 
     while True:
         cur.execute("select user_path from lastfm_users order by random()")
-        the_user = cur.fetchone()[0]
-        r = requests.get("http://www.last.fm" + the_user + "/friends")
+        the_user = cur.fetchone()
+        if the_user is None:
+            continue
+
+        r = requests.get("http://www.last.fm" + the_user[0] + "/friends")
         soup = bs4.BeautifulSoup(r.content)
         for link in soup.select(".userContainer strong a"):
             href = link["href"]
