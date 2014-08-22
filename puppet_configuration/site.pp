@@ -68,6 +68,18 @@ package { "python-pip":
   ensure => "installed",
 }
 
+package { "git":
+  ensure => "installed",
+}
+
+package { "python-dev":
+  ensure => "installed",
+}
+
+package { "python-virtualenv":
+  ensure => "installed",
+}
+
 exec { "gem install bundler":
   require => Package["ruby2.1-dev"],
   cwd     => '/tmp',
