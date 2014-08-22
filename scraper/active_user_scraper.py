@@ -15,7 +15,8 @@ if __name__ == "__main__":
         soup = bs4.BeautifulSoup(r.content)
         for link in soup.select(".userContainer strong a"):
             href = link["href"]
-            cur.execute("INSERT into lastfm_users (user_path) SELECT %s where not exists (select 1 from lastfm_users where user_path=%s)", (href,href))
-            logging.info("Got user %s" % (href))
+            cur.execute("INSERT into lastfm_users (user_path) SELECT %s where not exists (select 1 from lastfm_users where user_path=%s) returning id", (href,href))
+            if cur.fetchone() is not None:
+                logging.info("Got new user %s" % (href))
         conn.commit()
         delay.sleep()
