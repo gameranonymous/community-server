@@ -80,6 +80,10 @@ package { "python-virtualenv":
   ensure => "installed",
 }
 
+package { "nodejs-legacy":
+  ensure => "installed",
+}
+
 exec { "gem install bundler":
   require => Package["ruby2.1-dev"],
   cwd     => '/tmp',

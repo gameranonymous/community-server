@@ -1,2 +1,4 @@
 active_users: python active_user_scraper.py
 friend_users: python friend_user_scraper.py
+tracks: python track_scraper.py
+stats: cd stats && bundle exec dashing start

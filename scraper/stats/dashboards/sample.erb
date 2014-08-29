@@ -1,0 +1,20 @@
+<% content_for :title do %>My super sweet dashboard<% end %>
+<div class="gridster">
+  <ul>
+    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
+      <div data-id="users" data-view="Number" data-title="Scraped Lastfm users"></div>
+    </li>
+    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
+      <div data-id="scrobbles" data-view="Number" data-title="Scraped Lastfm scrobbles"></div>
+    </li>
+    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
+      <div data-id="unique_tracks" data-view="Number" data-title="Unique tracks scraped"></div>
+    </li>
+    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
+      <div data-id="density" data-view="Number" data-title="Matrix density" data-suffix='%'></div>
+    </li>
+    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
+      <div data-id="workers" data-view="Number" data-title="Running workers"></div>
+    </li>
+  </ul>
+</div>

@@ -18,6 +18,11 @@ def database_connection():
     )
 
 
+def random_user_id_and_path():
+    conn = database_connection()
+    cur = conn.cursor()
+    cur.execute("select id, user_path from lastfm_users order by random()")
+    return cur.fetchone()
 
 if __name__ == "__main__":
     conn = database_connection()
@@ -42,9 +47,11 @@ if __name__ == "__main__":
     cur.execute("""
         CREATE TABLE IF NOT EXISTS lastfm_scrobbles (
          id serial primary key,
-         lastfm_path varchar(511),
-         lastfm_title varchar(255),
-         lastfm_artist varchar(255),
+         lastfm_track_name varchar(255),
+         lastfm_track_path varchar(511),
+         lastfm_artist_name varchar(255),
+         lastfm_artist_path varchar(255),
+         lastfm_track_id varchar(255),
          lastfm_user_id integer,
          previous_scrobble integer,
          scrobbled_at timestamp
