@@ -59,4 +59,8 @@ if __name__ == "__main__":
     """
     )
 
+    cur.execute("""
+        ALTER TABLE lastfm_scrobbles ALTER COLUMN lastfm_track_path type varchar(2048)
+    """)
+
     conn.commit()
