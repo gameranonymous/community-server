@@ -59,8 +59,19 @@ if __name__ == "__main__":
     """
     )
 
+#    cur.execute("""
+#        ALTER TABLE lastfm_scrobbles ALTER COLUMN lastfm_track_path type varchar(2048)
+#    """)
+#
     cur.execute("""
-        ALTER TABLE lastfm_scrobbles ALTER COLUMN lastfm_track_path type varchar(2048)
+        CREATE TABLE IF NOT EXISTS rosetta_metadata (
+        id serial primary key,
+ lastfm_track_path varchar(2048),
+ json text,
+ artist_name varchar(2048),
+ track_name varchar(2048),
+ album_art_url varchar(2048)
+ );
     """)
 
     conn.commit()

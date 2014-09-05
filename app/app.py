@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, session, redirect
 import json
+from bs4 import BeautifulSoup
+import requests
+from random import choice
 import os
 import db
 from rdioapi import Rdio
@@ -30,20 +33,72 @@ def begin_rdio_auth():
     session["rdio_state"] = state
     return auth_url
 
+def spotify_id_from_lastfm_page(lastfm_id):
+    response = requests.get("http://last.fm" + lastfm_id)
+    body = response.content
+    soup = BeautifulSoup(body)
+    return soup.select(".spotify-inline-play-button")[0].attrs["data-uri"]
+
+def metadata_for_lastfm_id(lastfm_id):
+    spaces = [
+            "7digital-US",
+            "deezer",
+            "fma",
+            "playme",
+            "rhapsody-US",
+            "rdio-DE",
+            "spotify",
+            "whosampled",
+    ]
+
+    all_spaces = "&".join(["bucket=id:" + k for k in spaces])
+    row = db.metadata_row(lastfm_id)
+    if row is None:
+        spotify_id = spotify_id_from_lastfm_page(lastfm_id)
+        print spotify_id
+        echonest_url = "http://developer.echonest.com/api/v4/track/profile?api_key=NODV0LSHAP8SI9WAF&format=json&id=" + spotify_id
+        response = requests.get(echonest_url)
+        json = response.json()
+        song_id = json["response"]["track"]["song_id"]
+        print song_id
+        echonest_url = "http://developer.echonest.com/api/v4/song/profile?api_key=NODV0LSHAP8SI9WAF&format=json&id=" + song_id + "&bucket=tracks&" + all_spaces
+        response = requests.get(echonest_url)
+        json = response.json()
+        artist_name = json["response"]["songs"][0]["artist_name"]
+        track_name = json["response"]["songs"][0]["title"]
+        ids = {}
+        album_art = []
+        for track in json["response"]["songs"][0]["tracks"]:
+            ids[track["catalog"].split("-")[0]] = track["foreign_id"].split(":")[-1]
+            if track.has_key("release_image"):
+                album_art.append(track["release_image"])
+
+        album_art = choice(album_art)
+
+        ids["tomahawk"] = artist_name + "," + track_name
+
+        db.save_metadata_row(lastfm_id, artist_name, track_name, ids, album_art)
+    row = db.metadata_row(lastfm_id)
+
+    return row
+
 @app.route("/")
 @app.route("/play")
 @app.route("/play/<path:path>")
 def index(path=None):
     return render_template("index.html")
 
+@app.route("/deezer_channel")
+def channel(path=None):
+    return "<script src='http://cdn-files.deezer.com/js/min/dz.js'></script>"
+
 @app.route("/api/next_track")
 def next_track():
-    return json.dumps(
-            {
-                "track_ids": {"tomahawk": "Imagine Dragons,Radioactive", "rdio": "t20005736" },
-                "lastfm_like_url":"Imagine+Dragons/_/Radioactive",
-            }
-    )
+    tracks = [("Imagine Dragons", "Radioactive"), ("AWOLNATION", "Sail")]
+    track = choice(tracks)
+    lastfm_track_id = "/music/" + track[0].replace(" ","+") + "/_/" + track[1].replace(" ", "+")
+    metadata = metadata_for_lastfm_id(lastfm_track_id)
+    return json.dumps(metadata)
 
 @app.route("/user/has_rdio")
 def has_rdio():

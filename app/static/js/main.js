@@ -4,16 +4,17 @@ $(document).ready(function() {
     var player = new Player(function(trackHandle) {
         i += 1;
         $("#message").show();
-        $("#message").text("Now Playing:" + trackHandle.artist_string + "_" +  trackHandle.title_string + " " + i);
+        $("#message").text("Now Playing:" + trackHandle.response.artist_name + " " +  trackHandle.response.track_name + " " + i);
         $.get("/api/next_track", function(response) {
             if (typeof(response) === "string") {
                 response = JSON.parse(response);
             }
 
+            console.log("start loading next track");
             player.startLoadingNextTrack(response);
 
         });
-        window.history.pushState({}, "", "/play/" + trackHandle.artist_string.replace(" ", "+") + "/_/" + trackHandle.title_string.replace(" ", "+"));
+        window.history.pushState({}, "", "/play/" + trackHandle.response.artist_name.replace(" ", "+") + "/_/" + trackHandle.response.track_name.replace(" ", "+"));
     });
     function renderIndex() {
     }
