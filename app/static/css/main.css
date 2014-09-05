@@ -1,0 +1,29 @@
+h1 {
+    font-weight:bold;
+    text-align:center;
+    font-size:120pt;
+}
+
+body {
+    font-family:'Avenir';
+    background-color:#000;
+    text-align:center;
+    color:#fff;
+}
+
+.btn-ours {
+    font-size:240pt;
+    border-radius:50%;
+    background-color:#3C5A8C;
+    color:#fff;
+    bottom:0;
+    width:500px;
+    height:500px;
+    padding-left:65px;
+    padding-top:35px;
+}
+
+.text {
+    margin-top:20vh;
+    font-size:60pt;
+}
