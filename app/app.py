@@ -39,11 +39,14 @@ def index(path=None):
 def next_track():
     return json.dumps(
             {
-             "track_id": "Imagine Dragons,Radioactive",
-             "resolver":"tomahawk",
-             "lastfm_like_url":"Imagine+Dragons/_/Radioactive",
+                "track_ids": {"tomahawk": "Imagine Dragons,Radioactive", "rdio": "t20005736" },
+                "lastfm_like_url":"Imagine+Dragons/_/Radioactive",
             }
     )
+
+@app.route("/user/has_rdio")
+def has_rdio():
+    return json.dumps({"has_rdio": session.get("rdio_token_complete", False)})
 
 @app.route("/rdio_callback")
 def rdio_callback():

@@ -1,20 +1,23 @@
 $(document).ready(function() {
     window.currentState = null;
-    var player = new Player();
+    var i = 0;
+    var player = new Player(function(trackHandle) {
+        i += 1;
+        $("#message").text("Now Playing:" + trackHandle.artist_string + "_" +  trackHandle.title_string + " " + i);
+        window.history.pushState({}, "", "/play/" + trackHandle.artist_string.replace(" ", "+") + "/_/" + trackHandle.title_string.replace(" ", "+"));
+    });
     function renderIndex() {
     }
 
     function renderPlayer() {
         $("#play").fadeOut();
         $("#message").text("Loading a track...");
+
         $.get("/api/next_track", function(response) {
             if (typeof(response) === "string") {
                 response = JSON.parse(response);
             }
-            player.playTrackFor(response, function() {
-                $("#message").text("Now playing:" + response.track_id);
-                window.history.pushState({}, "", "/play/" + response.lastfm_like_url);
-            });
+            player.playTrackFor(response);
         });
     }
     var currentState = null;
@@ -25,7 +28,7 @@ $(document).ready(function() {
             "/play": renderPlayer,
         }
 
-        if (currentState != newState) {
+        if (currentState != newState && newState.indexOf("_" == -1)) {
             console.log("state transition");
             currentState = newState;
             views[newState]();
