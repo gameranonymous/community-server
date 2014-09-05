@@ -1,41 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-{{ rdio_token }}
-<div id="player"></div>
-<script src="//ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script type="text/javascript">
-    $(document).ready(function() {
-        var player = null;
-
-        window.callback = {
-            ready: function(info) {
-                player = document.getElementById("player");
-                player.rdio_play('t2836508');
-                console.log("setting up pause");
-                $("#pause").click(function() {
-                    player.rdio_pause();
-                });
-                $("#play").click(function() {
-                    player.rdio_play();
-                });
-            }
-        }
-
-        var flashvars = {
-            playbackToken: "{{rdio_token}}",
-            domain: window.location.hostname,
-            listener: "callback",
-            enableLogging: 1
-        };
-        var params = {
-            allowScriptAccess: "always"
-        };
-        var attributes = {};
-
-        swfobject.embedSWF("http://www.rdio.com/api/swf/", "player", "0", "0", "9.0.0","expressInstall.swf", flashvars, params, attributes);
-    });
+    window.close();
 </script>
-<a href="#" id="play">Play</a>
-<a href="#" id="pause">Pause</a>
 {% endblock %}

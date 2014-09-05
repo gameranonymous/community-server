@@ -2,8 +2,19 @@
 
 {% block body %}
 <h1>Penultimate Radio</h1>
+<div>
 <a href="/play" class="btn btn-primary btn-ours" id="play">&#9654;</a>
+</div>
 <div class="text" id="message"></div>
+<div id="controls" style="display:none;">
+<a href="#" id="prev">Prev</a> <a href="#" id="pause">Pause</a> <a href="#" id="next">Next</a>
+</div>
+<div id="buttons">
+<button class="btn btn-primary" id="rdio_auth">+ rdio</button>
+</div>
+<div id="rdio_player"></div>
 <script type="text/javascript" src="/static/js/player.js"></script>
 <script type="text/javascript" src="/static/js/main.js"></script>
+<script type="text/javascript" src="/static/js/popup.js"></script>
+<script type="text/javascript" src="/static/js/rdio_auth.js"></script>
 {% endblock %}
