@@ -80,3 +80,12 @@ body {
     font-size: 30px;
     padding: 15px 10px;
 }
+
+#reverb {
+    position: fixed;
+    bottom:0;
+
+    right:0;
+    background-color:#fff;
+    display:none;
+}

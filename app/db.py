@@ -37,6 +37,7 @@ def metadata_row(lastfm_track_id):
         return None
     else:
         return {
+                "lastfm_id": row[1],
                 "track_ids": json.loads(row[2]),
                 "album_art_url": row[5],
                 "artist_name": row[3],
