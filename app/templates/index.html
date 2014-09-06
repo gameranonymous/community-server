@@ -1,20 +1,32 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<h1>Penultimate Radio</h1>
-<div>
-<a href="/play" class="btn btn-primary btn-ours" id="play">&#9654;</a>
-</div>
-<div class="text" id="message"></div>
-<div id="controls" style="display:none;">
-<a href="#" id="prev">Prev</a> <a href="#" id="pause">Pause</a> <a href="#" id="next">Next</a>
-</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6" id="left-column">
+            <h1 class="hide-on-play">Penultimate Radio</h1>
+            <div class="text" id="message"></div>
+            <div id="controls" style="display:none;">
+                <a href="#" id="prev">Prev</a> <a href="#" id="pause">Pause</a> <a href="#" id="next">Next</a>
+            </div>
+        </div>
+        <div class="col-md-6 right">
+            <div class="background"></div>
+            <div class="text" id="next-up"></div>
+            <a href="/play" class="btn btn-primary btn-ours hide-on-play" id="play">&#9654;</a>
+            <a href="#" id="another" class="show-on-play" style="display:none;">Something different</a>
+        </div>
+    </div>
 <div id="buttons">
-<button class="btn btn-primary" id="rdio_auth">+ rdio</button>
+    <button class="btn btn-primary" id="rdio_auth">+ rdio</button>
+</div>
+<div id='reverb'>
+    Powered by the reverb birdhouse <img src="/static/img/reverb_bird_house.jpg">
 </div>
 <div id="rdio_player"></div>
 <script type="text/javascript" src="/static/js/player.js"></script>
 <script type="text/javascript" src="/static/js/main.js"></script>
 <script type="text/javascript" src="/static/js/popup.js"></script>
 <script type="text/javascript" src="/static/js/rdio_auth.js"></script>
+</div>
 {% endblock %}

@@ -1,29 +1,54 @@
 $(document).ready(function() {
-    window.currentState = null;
     var i = 0;
-    var player = new Player(function(trackHandle) {
+    function html_for_response(prefix, response) {
         i += 1;
-        $("#message").show();
-        $("#message").text("Now Playing:" + trackHandle.response.artist_name + " " +  trackHandle.response.track_name + " " + i);
-        $.get("/api/next_track", function(response) {
+        return "<h3>" + prefix + "</h3>" + "<h1>" + response.track_name + "</h1>" + "<h2>" + response.artist_name +"</h2>" + "<img src='" + response.album_art_url + "'>"
+    }
+    window.currentState = null;
+    var currentTrackID = null;
+    function loadNextTrack() {
+        $.get("/api/next_track", {"cid":currentTrackID}, function(response) {
             if (typeof(response) === "string") {
                 response = JSON.parse(response);
             }
 
             console.log("start loading next track");
             player.startLoadingNextTrack(response);
+            $("#next-up").html(html_for_response("Next up: ", response));
+            $("#next-up").show();
+            $(".right .background").css({
+                "background-image":"url('" + response.album_art_url + "')",
+                "background-size":"cover",
+            });
 
         });
+    }
+    var player = new Player(function(trackHandle) {
+        console.log("track id is");
+        currentTrackID = trackHandle.response.lastfm_id;
+        console.log(currentTrackID);
+        $("#message").show();
+        $("#message").html(html_for_response("Now Playing: ", trackHandle.response));
+        $(".show-on-play").show();
+        loadNextTrack();
         window.history.pushState({}, "", "/play/" + trackHandle.response.artist_name.replace(" ", "+") + "/_/" + trackHandle.response.track_name.replace(" ", "+"));
     });
     function renderIndex() {
     }
 
+    $("#another").click(function() {
+        loadNextTrack();
+    });
+
     function renderPlayer() {
-        $("#play").fadeOut();
+        $(".hide-on-play").fadeOut();
         $("#message").show();
         $("#message").text("Loading a track...");
-        $("#controls").show();
+        $("#left-column").hover(function() {
+            $("#controls").show();
+        }, function() {
+            $("#controls").hide();
+        });
 
         var state = 1;
         $("#pause").click(function() {

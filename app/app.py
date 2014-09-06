@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session, redirect
+from markovish import markovish
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -94,9 +95,14 @@ def channel(path=None):
 
 @app.route("/api/next_track")
 def next_track():
-    tracks = [("Imagine Dragons", "Radioactive"), ("AWOLNATION", "Sail")]
-    track = choice(tracks)
-    lastfm_track_id = "/music/" + track[0].replace(" ","+") + "/_/" + track[1].replace(" ", "+")
+    cid = request.args.get("cid", "")
+    if cid == "":
+        tracks = [("Imagine Dragons", "Radioactive"), ("AWOLNATION", "Sail")]
+        track = choice(tracks)
+        lastfm_track_id = "/music/" + track[0].replace(" ","+") + "/_/" + track[1].replace(" ", "+")
+    else:
+        lastfm_track_id = markovish().select_next_track(cid)
+
     metadata = metadata_for_lastfm_id(lastfm_track_id)
     return json.dumps(metadata)
 
