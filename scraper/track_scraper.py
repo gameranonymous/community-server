@@ -6,6 +6,24 @@ import logging
 import delay
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
+def scrape_scrobbles(user_id, user_path):
+    current_scrobble = None
+    for page_number in xrange(0, 10):
+         logging.info("Pulling scrobble page: %s for user: %s" % (page_number+1,user_path))
+         r = requests.get("http://www.last.fm" + user_path + "/tracks?view=compact&page=%s" % (page_number+1,))
+         soup = bs4.BeautifulSoup(r.content)
+         scrobbles = soup.select(".js-scrobble")
+         for scrobble in scrobbles:
+             sd = ScrobbleDecoder(scrobble)
+             logging.info("Got a scrobble: %s for user: %s" % (sd.track_name(), user_path))
+             sd.save(user_id)
+
+             if current_scrobble is not None:
+                 current_scrobble.update_previous_scrobble(sd)
+
+             current_scrobble = sd
+         logging.info("Done scrobble page: %s for user: %s" % (page_number+1,user_path))
+
 class ScrobbleDecoder:
     def __init__(self, scrobble):
         self._scrobble = scrobble
@@ -62,7 +80,6 @@ class ScrobbleDecoder:
 
         conn.commit()
 
-
     def _track_link(self):
         return self._detail_links()[1]
 
@@ -81,24 +98,8 @@ if __name__ == "__main__":
             the_user = db.random_user_id_and_path()
             if the_user is None:
                 continue
-
+            
             user_id, user_path = the_user
-            current_scrobble = None
-            for page_number in xrange(0, 10):
-                logging.info("Pulling scrobble page: %s for user: %s" % (page_number+1,user_path))
-                r = requests.get("http://www.last.fm" + user_path + "/tracks?view=compact&page=%s" % (page_number+1,))
-                soup = bs4.BeautifulSoup(r.content)
-                scrobbles = soup.select(".js-scrobble")
-                for scrobble in scrobbles:
-                    sd = ScrobbleDecoder(scrobble)
-                    logging.info("Got a scrobble: %s for user: %s" % (sd.track_name(), user_path))
-                    sd.save(user_id)
-
-                    if current_scrobble is not None:
-                        current_scrobble.update_previous_scrobble(sd)
-
-                    current_scrobble = sd
-                logging.info("Done scrobble page: %s for user: %s" % (page_number+1,user_path))
-                delay.sleep()
+            delay.sleep()
         except:
             pass

@@ -9,6 +9,7 @@ Created by Ben Fields on 2014-09-05..
 import sys
 import os
 import unittest
+import random
 import numpy as np
 from scipy import stats
 from db import database_connection
@@ -18,6 +19,7 @@ from recsys.algorithm.factorize import SVD
 
 class markovish:
     def __init__(self, user = None, connection=database_connection(), svd=None):
+        """user, if given, needs to be the user id not he user path. personalization assumes a pre computed svd"""
         self.conn = connection
         self.user = user
         self.svd = svd
@@ -62,8 +64,10 @@ class markovish:
         #   transition_vector[idx] += count*existance_weighting
         return labels, np.array(raw_counts, dtype=np.float64)
         
-    def get_personal_recs(self, labels, transition_vector):
-        pass
+    def get_personal_recs(self):
+        if self.svd == None or self.:
+            raise  ValueError("can't do user recs without the svd and a user")
+        return svd.recommend(self.user, is_row=False)
     
     def select_next_track(self, track_label, conn = None, topN = 20):
         if conn == None:
@@ -71,7 +75,10 @@ class markovish:
         labels, transition_vector = self.get_scrobble_transition_vector(track_label, topN)
         if self.user != None:
             print "in personalization..."
-            transition_vector = self.get_personal_recs(labels, transition_vector)
+            personal_recs = self.get_personal_recs()
+            if random.choice(range(3)) == 0:
+                print "using personal recs"
+                return random.choice(personal_recs)[0]
         all_counts = transition_vector.sum()
         print "raw counts:", transition_vector[:10]
         transition_vector = transition_vector / all_counts
