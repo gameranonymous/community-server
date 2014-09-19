@@ -1,5 +1,5 @@
 include apt
-apt::ppa{'ppa:brightbox/ruby-ng-experimental':}
+include rvm
 
 $environment_file  = "/etc/environment"
 $postgres_username = 'one'
@@ -9,10 +9,22 @@ $postgres_port     = "5432"
 $postgres_db       = "one"
 $port_to_bind_to   = "4567"
 
-class { 'ruby':
-  gems_version => 'latest',
-  ruby_package => 'ruby2.1',
-  require      => Apt::Ppa['ppa:brightbox/ruby-ng-experimental'],
+rvm_system_ruby {
+  'ruby-2.0.0-p353':
+    ensure      => 'present',
+    default_use => true;
+}
+
+rvm_gemset {
+  'ruby-2.0.0-p353@discourse':
+    ensure  => present,
+    require => Rvm_system_ruby['ruby-2.0.0-p353'];
+}
+
+rvm_gem {
+  'ruby-2.0.0-p353@discourse/bundler':
+    ensure  => '1.0.21',
+    require => Rvm_gemset['ruby-2.0.0-p353@discourse'];
 }
 
 class { 'postgresql::server': }
@@ -54,38 +66,53 @@ concat::fragment{"env_binding_port":
   require => Postgresql::Server::Db[$postgres_db],
 }
 
-package { "ruby2.1-dev":
-  ensure  => "installed",
-  require => Class["ruby"],
-}
-
-package { "libpq-dev":
-  ensure  => "installed",
-  require => Package["ruby2.1-dev"],
-}
-
-package { "python-pip":
-  ensure => "installed",
-}
-
 package { "git":
   ensure => "installed",
 }
 
-package { "python-dev":
-  ensure => "installed",
+class { 'redis':
+  version            => '2.8.14',
 }
 
-package { "python-virtualenv":
-  ensure => "installed",
+redis::instance { 'redis-6900':
+  redis_port         => '6900',
+  redis_bind_address => '127.0.0.1',
+  redis_password     => "one",
+  redis_max_memory   => '256mb',
 }
 
-package { "nodejs-legacy":
-  ensure => "installed",
+group { 'discourse':
+  ensure => 'present',
 }
 
-exec { "gem install bundler":
-  require => Package["ruby2.1-dev"],
-  cwd     => '/tmp',
-  path    => ['/usr/bin'],
+user { 'discourse':
+  ensure => 'present',
+  shell => '/bin/bash',
+  home => '/home/discourse',
+  managehome => true,
+  require => [Group["discourse"]]
+}
+
+file { ["/var/www"]:
+  ensure => 'directory',
+  owner => 'root',
+  group => 'root',
+  mode => "0777"
+}
+
+file { ["/var/www/discourse"]:
+  ensure => 'directory',
+  owner => 'discourse',
+  group => 'discourse',
+  mode => "0755",
+  require => User["discourse"]
+}
+
+vcsrepo { "/var/www/discourse":
+  ensure => present,
+  provider => git,
+  source => "git://github.com/discourse/discourse.git",
+  user => "discourse",
+  revision => "latest-release",
+  require => [User["discourse"],File["/var/www/discourse"]]
 }
