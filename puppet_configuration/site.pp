@@ -145,10 +145,11 @@ exec { "bundle_install":
 }
 
 exec { "rake_db_migrate":
-  command => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do RAILS_ENV=production bundle exec rake db:migrate",
+  command => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake db:migrate",
   cwd     => "/var/www/discourse",
   user    => "discourse",
   timeout => 0,
+  environment => ["RAILS_ENV=production"],
   require => [
     Vcsrepo["/var/www/discourse"],
     Rvm_gemset['2.0.0-p481@discourse'],
@@ -156,6 +157,21 @@ exec { "rake_db_migrate":
     File["/var/www/discourse/config/discourse.conf"],
     Exec['bundle_install']
     ]
-
+}
+exec { "asset precompile":
+  command => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake assets:precompile",
+  environment => ["RAILS_ENV=production"],
+  cwd => "/var/www/discourse",
+  user => "discourse",
+  logoutput => true,
+  require => Exec["rake_db_migrate"],
 }
 
+exec { "rails s":
+  command     => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rails s",
+  environment => ["RAILS_ENV=production"],
+  cwd         => "/var/www/discourse",
+  user        => "discourse",
+  logoutput   => true,
+  require     => Exec["asset precompile"],
+}
