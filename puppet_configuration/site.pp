@@ -5,11 +5,11 @@ group { 'discourse':
 }
 
 user { 'discourse':
-  ensure => 'present',
-  shell => '/bin/bash',
-  home => '/home/discourse',
-  managehome => true,
-  require => [Group["discourse"]]
+  ensure      => 'present',
+  shell       => '/bin/bash',
+  home        => '/home/discourse',
+  managehome  => true,
+  require     => [Group["discourse"]]
 }
 
 include rvm
@@ -48,9 +48,9 @@ postgresql::server::role { $postgres_username:
   require       => Package['postgresql-contrib']
 }
 postgresql::server::db { $postgres_db:
-  require => Postgresql::Server::Role[$postgres_username],
-  user => $postgres_username,
-  password => $postgres_password,
+  require   => Postgresql::Server::Role[$postgres_username],
+  user      => $postgres_username,
+  password  => $postgres_password,
 }
 concat{$environment_file:
   owner => root,
@@ -87,6 +87,10 @@ package { "postgresql-contrib":
   ensure => "installed"
 }
 
+package { "nginx":
+  ensure => "installed"
+}
+
 class { 'redis':
   version            => '2.8.14',
 }
@@ -99,36 +103,54 @@ redis::instance { 'redis-6900':
 }
 
 file { ["/var/www"]:
-  ensure => 'directory',
-  owner => 'root',
-  group => 'root',
-  mode => "0777"
+  ensure  => 'directory',
+  owner   => 'root',
+  group   => 'root',
+  mode    => "0777"
 }
 
 file { ["/var/www/discourse"]:
-  ensure => 'directory',
-  owner => 'discourse',
-  group => 'discourse',
-  mode => "0755",
+  ensure  => 'directory',
+  owner   => 'discourse',
+  group   => 'discourse',
+  mode    => "0755",
   require => User["discourse"]
 }
 
 file { ["/var/www/discourse/config/discourse.conf"]:
-  ensure => 'file',
-  owner => 'discourse',
-  group => 'discourse',
-  mode => "0755",
-  source => 'puppet:///modules/toast/discourse.conf',
+  ensure  => 'file',
+  owner   => 'discourse',
+  group   => 'discourse',
+  mode    => "0755",
+  source  => 'puppet:///modules/toast/discourse.conf',
   require => Vcsrepo['/var/www/discourse']
 }
 
+file { ["/etc/nginx/discourse.conf"]:
+  ensure  => 'file',
+  owner   => 'discourse',
+  group   => 'discourse',
+  mode    => "0755",
+  source  => 'puppet:///modules/toast/discourse.nginx.conf',
+  require => [Vcsrepo['/var/www/discourse'], Package['nginx']],
+}
+
+file { ["/var/www/discourse/config/discourse.pill"]:
+  ensure  => 'file',
+  owner   => 'discourse',
+  group   => 'discourse',
+  mode    => "0755",
+  source  => 'puppet:///modules/toast/discourse.pill',
+  require => Vcsrepo['/var/www/discourse'],
+}
+
 vcsrepo { "/var/www/discourse":
-  ensure => present,
-  provider => git,
-  source => "git://github.com/discourse/discourse.git",
-  user => "discourse",
-  revision => "latest-release",
-  require => [User["discourse"],File["/var/www/discourse"]]
+  ensure    => present,
+  provider  => git,
+  source    => "git://github.com/discourse/discourse.git",
+  user      => "discourse",
+  revision  => "latest-release",
+  require   => [User["discourse"],File["/var/www/discourse"]]
 }
 
 exec { "bundle_install":
@@ -141,16 +163,15 @@ exec { "bundle_install":
     Rvm_gemset['2.0.0-p481@discourse'],
     Package["libpq-dev"]
     ]
-
 }
 
 exec { "rake_db_migrate":
-  command => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake db:migrate",
-  cwd     => "/var/www/discourse",
-  user    => "discourse",
-  timeout => 0,
+  command     => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake db:migrate",
+  cwd         => "/var/www/discourse",
+  user        => "discourse",
+  timeout     => 0,
   environment => ["RAILS_ENV=production"],
-  require => [
+  require     => [
     Vcsrepo["/var/www/discourse"],
     Rvm_gemset['2.0.0-p481@discourse'],
     Package["libpq-dev"],
@@ -158,13 +179,14 @@ exec { "rake_db_migrate":
     Exec['bundle_install']
     ]
 }
+
 exec { "asset precompile":
-  command => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake assets:precompile",
+  command     => "/usr/local/rvm/bin/rvm 2.0.0-p481@discourse do bundle exec rake assets:precompile",
   environment => ["RAILS_ENV=production"],
-  cwd => "/var/www/discourse",
-  user => "discourse",
-  logoutput => true,
-  require => Exec["rake_db_migrate"],
+  cwd         => "/var/www/discourse",
+  user        => "discourse",
+  logoutput   => true,
+  require     => Exec["rake_db_migrate"],
 }
 
 exec { "rails s":
@@ -173,5 +195,19 @@ exec { "rails s":
   cwd         => "/var/www/discourse",
   user        => "discourse",
   logoutput   => true,
-  require     => Exec["asset precompile"],
+  require     => [Exec["asset precompile"],
+    Package["nginx"]],
 }
+
+file { "/home/discourse/.bash_aliases":
+  owner   => "discourse",
+  content => 'alias bluepill="NOEXEC_DISABLE=1 bluepill --no-privileged -c ~/.bluepill"'
+}
+
+cron { bluepill:
+  command => "RUBY_GC_MALLOC_LIMIT=90000000 RAILS_ROOT=/var/www/discourse RAILS_ENV=production NUM_WEBS=2 /home/discourse/.rvm/bin/bootup_bluepill --no-privileged -c ~/.bluepill load /var/www/discourse/config/discourse.pill",
+  user    => 'discourse',
+  ensure  => "present",
+  special => 'reboot',
+}
+
